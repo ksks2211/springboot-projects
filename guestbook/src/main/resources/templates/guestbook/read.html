@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<th:block th:replace="~{/layout/basic :: setContent(~{this::content})}">
+  <th:block th:fragment="content">
+
+
+
+    <h1 class="mt-4">GuestBook Read Page</h1>
+
+    <div class="form-group">
+      <label for="gno">GNO</label>
+      <input type="text" class="form-control" name="gno" id="gno" th:value="${dto.gno}" readonly>
+    </div>
+
+    <div class="form-group">
+      <label for="title">Title</label>
+      <input type="text" class="form-control" name="title" id="title" th:value="${dto.title}" readonly>
+    </div>
+
+    <div class="form-group">
+      <label for="content">Content</label>
+      <textarea name="content" id="content" rows="5" class="form-control" readonly>[[${dto.content}]]</textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="writer"></label>
+      <input type="text" class="form-control" name="writer" id="writer" th:value="${dto.writer}" readonly>
+    </div>
+    <div class="form-group">
+      <label for="regDate"></label>
+      <input id="regDate" type="text" class="form-control" name="regDate" th:value="${#temporals.format(dto.regDate, 'yyyy/MM/dd HH:mm:ss')}" readonly>
+    </div>
+    <div class="form-group">
+      <label for="modDate"></label>
+      <input type="text" class="form-control" name="modDate" th:value="${#temporals.format(dto.modDate, 'yyyy/MM/dd HH:mm:ss')}" readonly id="modDate">
+    </div>
+
+
+    <a style="margin-top:15px;font-weight:bold; color:white" class="btn btn-primary" th:href="@{/guestbook/modify(gno=${dto.gno}, page=${requestDTO.page}, type=${requestDTO.type}, keyword=${requestDTO.keyword})}">
+      Modify
+    </a>&nbsp;
+    <a style="margin-top:15px; font-weight:bold; color:white;" class="btn btn-info" th:href="@{/guestbook/list(page=${requestDTO.page}, type=${requestDTO.type}, keyword=${requestDTO.keyword} )}">
+      List
+    </a>
+  </th:block>
+</th:block>
