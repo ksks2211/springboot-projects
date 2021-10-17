@@ -1,0 +1,11 @@
+spring.datasource.driver-class-name=org.mariadb.jdbc.Driver
+spring.datasource.url=
+spring.datasource.username=
+spring.datasource.password=
+
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.show-sql=true
+
+spring.thymeleaf.cache=false
