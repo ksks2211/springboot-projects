@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<th:block th:replace="~{/layout/basic :: setContent(~{this::content})}">
+  <th:block th:fragment="content">
+
+
+
+    <h1 class="mt-4">Board Modify/Delete Page</h1>
+    <form id="md-form">
+
+
+      <input type="hidden" name="page" th:value="${requestDTO.page}">
+      <input  type="hidden" name="type" th:value="${requestDTO.type}">
+      <input  type="hidden" name="keyword" th:value="${requestDTO.keyword}">
+
+      <div class="form-group">
+        <label for="bno">Bno</label>
+        <input type="text" class="form-control" name="bno" id="bno" th:value="${dto.bno}" readonly>
+      </div>
+
+      <div class="form-group">
+        <label for="title">Title</label>
+        <input type="text" class="form-control" name="title" id="title" th:value="${dto.title}" >
+      </div>
+
+      <div class="form-group">
+        <label for="content">Content</label>
+        <textarea name="content" id="content" rows="5" class="form-control">[[${dto.content}]]</textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="writer"></label>
+        <input type="text" class="form-control" name="writer" id="writer" th:value="${dto.writerName}" readonly>
+      </div>
+      <div class="form-group">
+        <label for="regDate"></label>
+        <input id="regDate" type="text" class="form-control" name="regDate" th:value="${#temporals.format(dto.regDate, 'yyyy/MM/dd HH:mm:ss')}" readonly>
+      </div>
+      <div class="form-group">
+        <label for="modDate"></label>
+        <input type="text" class="form-control" name="modDate" th:value="${#temporals.format(dto.modDate, 'yyyy/MM/dd HH:mm:ss')}" readonly id="modDate">
+      </div>
+    </form>
+
+
+
+    <button type="button" style="margin-top:15px;font-weight:bold; color:white" class="btn btn-primary" id="btn-mod">
+      Modify
+    </button>&nbsp;
+
+    <button type="button" style="margin-top:15px; font-weight:bold; color:white;" class="btn btn-info"id="btn-list">
+      List
+    </button>
+    <button type="button" style="margin-top:15px; font-weight:bold; color:white;" class="btn btn-danger" id="btn-del">
+      Remove
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script th:inline="javascript">
+
+      const modData={}
+      const page = [[${requestDTO.page}]]
+      const elements = document.querySelector("#md-form").elements;
+      const bno = elements["bno"].value;
+      const btnMod = document.querySelector("#btn-mod");
+      const modForm = document.querySelector('#md-form');
+
+
+
+      //var page = modForm.page.value;
+      const type = modForm.type.value;
+      const keyword = modForm.keyword.value;
+
+
+
+      modData["content"] = elements["content"].value;
+      modData["bno"] = elements["bno"].value;
+      modData["title"] = elements["title"].value
+      console.log(modData);
+
+      const btnDel = document.querySelector("#btn-del");
+      btnDel.addEventListener('click',(e)=>{
+        axios.delete(`http://localhost:8080/board/remove?bno=${bno}`).then(res=>{
+
+
+          let addr = new URL("http://localhost:8080/board/list");
+          addr.searchParams.append('msg',bno);
+          if(keyword && type){
+            addr.searchParams.append('keyword',keyword);
+            addr.searchParams.append('type',type);
+          }
+          window.location.href=`http://localhost:8080/board/list?msg=${bno}`;
+        }).catch(err=>{
+          console.error(err);
+        })
+      });
+
+
+      btnMod.addEventListener('click',(e)=>{
+        if(!confirm("수정 하시겠 습니까?")){
+          return;
+        }
+
+        axios.patch(`http://localhost:8080/board/modify`,{
+          bno,
+          title:modForm.elements["title"].value,
+          content : modForm.elements["content"].value.trim()
+        }).then((res)=>{
+          let addr = new URL("http://localhost:8080/board/read");
+          addr.searchParams.append('bno',bno);
+          if(keyword && type){
+            addr.searchParams.append('keyword',keyword);
+            addr.searchParams.append('type',type);
+          }
+          window.location.href=addr.href;
+        }).catch((err)=>{
+          console.error(err);
+        });
+      })
+
+      const btnList = document.querySelector("#btn-list");
+      btnList.addEventListener('click',(e)=>{
+        e.preventDefault();
+
+        let addr = new URL("http://localhost:8080/board/list");
+        addr.searchParams.append('page',page);
+        if(keyword && type){
+          addr.searchParams.append('keyword',keyword);
+          addr.searchParams.append('type',type);
+        }
+        window.location.href=addr.href;
+      });
+
+    </script>
+  </th:block>
+</th:block>

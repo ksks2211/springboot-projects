@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:replace="~{/layout/basic :: setContent(~{this::content})}">
+
+    <th:block th:fragment="content">
+        <h1 class="mt-4">Board Read Page</h1>
+        <div class="form-group">
+            <label>Bno
+
+            </label>
+            <input type="text" name="bno" th:value="${dto.bno}" class="form-control" readonly>
+        </div>
+
+        <div class="form-group">
+            <label>Title
+
+            </label>
+            <input type="text" name="title" class="form-control" th:value="${dto.title}" readonly>
+        </div>
+
+        <div class="form-group">
+            <label>Content
+            </label>
+            <textarea class="form-control" name="content" rows="5" readonly>[[${dto.content}]]</textarea>
+
+        </div>
+
+
+        <div class="form-group">
+            <label>Writer
+            </label>
+            <input type="text" name="writer" th:value="${dto.writerName}" class="form-control" readonly>
+
+        </div>
+
+        <div class="form-group">
+            <label>RegDate
+            </label>
+            <input class="form-control" type="text" name="regDate"
+                   th:value="${#temporals.format(dto.regDate,'yyyy/MM/dd HH:mm:ss')}" readonly>
+
+        </div>
+        <div class="form-group">
+            <label>ModDate
+            </label>
+            <input class="form-control" type="text" name="modDate"
+                   th:value="${#temporals.format(dto.modDate,'yyyy/MM/dd HH:mm:ss')}" readonly>
+
+        </div>
+
+        <a class="btn btn-primary" style="margin-top:15px;font-weight:bold; color:white"
+           th:href="@{/board/modify(bno=${dto.bno}, page=${requestDTO.page} , type=${requestDTO.type}, keyword=${requestDTO.keyword})}">
+            Modify
+        </a>
+
+        <a class="btn btn-info" style="margin-top:15px;font-weight:bold; color:white"
+           th:href="@{/board/list(page=${requestDTO.page}, type=${requestDTO.type}, keyword=${requestDTO.keyword})}">
+            List
+        </a>
+
+
+
+        <div>
+            <div class="mt-4">
+                <h5>
+<!--                    modal trigger-->
+                    <button style="color:white; font-weight:bold;" type="button" data-bs-toggle="modal" data-bs-target="#modal" class="btn btn-sm btn-info addReply">Add Reply</button>
+                </h5>
+                <h5>
+                    <button style="color:white; font-weight: bold;" type="button" class="btn btn-sm btn-secondary replyCount">Reply Count [[${dto.replyCount}]]</button>
+                </h5>
+            </div>
+            <div class="list-group replyList">
+
+            </div>
+        </div>
+
+        <!--modal-->
+        <div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Modal Title</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true"></span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" name="replyText" placeholder="Reply Text...">
+                        </div>
+                        <div class="mb-3">
+                            <input type="text" class="form-control" name="replier" placeholder="Replyer">
+                            <input type="hidden" name="rno">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger replyRemove">Remove</button>
+                        <button type="button" class="btn btn-warning replyModify">Modify</button>
+                        <button type="button" class="btn btn-primary replySave">Save</button>
+                        <button type="button" class="btn btn-outline-secondary replyClose" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script th:inline="javascript">
+
+            var bno = [[${dto.bno}]]
+            var replyBtn = document.querySelector('.replyCount');
+            var replyList = document.querySelector('.replyList');
+            var addReply = document.querySelector('.addReply');
+            var replySave = document.querySelector('.replySave');
+            var modal = new bootstrap.Modal(document.getElementById('modal'),{
+                keyboard:false
+            });
+            var cards = document.querySelectorAll('.replyList .card-body');
+            var replyRemove = document.querySelector('.replyRemove');
+            var replyModify = document.querySelector('.replyModify');
+
+
+            // 날짜 정보 가공  YYYY/MM/DD/HH/MM
+            function formatTime(str) {
+                var date = new Date(str);
+                return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${date.getMinutes()}`;
+            }
+
+            async function loadJSONData() {
+                await fetch(`http://localhost:8080/replies/board/${bno}`)
+                    .then(res => res.json())
+                    .then(data => {
+                            console.log(data)
+                            var str = "";
+                            document.querySelector('.replyCount').innerHTML = " Reply Count " + data.length;
+                            data.forEach((reply) => {
+                                console.log();
+                                str += `<div class="card-body" data-rno="${reply.rno}"><b> ${reply.rno} </b>`
+                                str += `<h5 class="card-title">${reply.text}</h5>`
+                                str += `<h6 class="card-subtitle mb-2 text-muted">${reply.replier}</h6>`
+                                str += `<p class="card-text">${formatTime(reply.regDate)}</p>`
+                                str += "</div>"
+                            });
+                            replyList.innerHTML = str;
+                        }
+                    )
+                    .catch(e=>{
+                        console.error(e);
+                    })
+                updateCards();
+            }
+
+
+
+            function updateCards(){
+                console.log("lalala");
+
+                cards = document.querySelectorAll('.replyList .card-body');
+                console.log(cards.length)
+                cards.forEach(card=>{
+                    card.addEventListener('click',()=>{
+
+                        console.log("Clicked card")
+                        var rno = card.dataset.rno;
+                        var title = card.querySelector('.card-title').innerHTML;
+                        var replier = card.querySelector('.card-subtitle').innerHTML;
+
+                        document.querySelector('input[name="replyText"]').value = title;
+                        document.querySelector('input[name="replier"]').value = replier;
+                        document.querySelector('input[name="rno"]').value = rno;
+
+                        document.querySelectorAll('.modal-footer .btn').forEach((btn)=>{
+                            console.log(btn)
+                            btn.classList.add("d-none");
+                        });
+
+                        document.querySelector('.replyModify').classList.remove('d-none');
+                        document.querySelector('.replyRemove').classList.remove("d-none");
+                        document.querySelector('.replyClose').classList.remove("d-none");
+                        modal.show();
+                    })
+                })
+            }
+
+            // 클릭시 댓글 가져오기
+            window.onload = () => {
+                replyBtn.addEventListener('click',() => {
+                    loadJSONData();
+                });
+
+                addReply.addEventListener('click',()=>{
+                    console.log("Clicked")
+                    document.querySelectorAll('.modal-footer .btn').forEach((btn)=>{
+                        console.log(btn)
+                        btn.classList.add("d-none");
+                    });
+
+                    document.querySelector('.replySave').classList.remove("d-none");
+                    document.querySelector('.replyClose').classList.remove("d-none");
+                });
+
+                replySave.addEventListener('click',()=>{
+
+                    var text = document.querySelector('input[name="replyText"]').value;
+                    var replier = document.querySelector('input[name="replier"]').value;
+
+                    var reply = {
+                        bno,
+                        text,
+                        replier
+                    }
+                    console.log(reply);
+
+                    // POST
+                    fetch(`http://localhost:8080/replies/`,{
+                        method:"POST",
+                        headers:{
+                            'Content-Type':'application/json; charset=utf-8'
+                        },
+                        body: JSON.stringify(reply)
+                    })
+                    .then((data)=>data.json())
+                    .then((data)=>{
+                        var newRno = parseInt(data);
+                        console.log(data);
+                        alert(newRno+"번 댓글이 등록되었습니다");
+                        modal.hide();
+                        loadJSONData();// 댓글목록 새로 가져오기
+                    });
+
+
+
+
+
+                })
+
+                replyRemove.addEventListener('click',()=>{
+                    var rno = document.querySelector("input[name='rno']").value;
+
+                    fetch(`/replies/${rno}`,{method:"DELETE",})
+                        .then((res)=>res.text())
+                        .then(msg=>{
+                            console.log(msg);
+                            if(msg==='success'){
+                                alert("댓글이 삭제되었습니다.");
+                                modal.hide();
+                                loadJSONData();
+                            }else{
+                                alert("댓글 삭제 실패\n다시 시도하세요.");
+                            }})
+                        .catch(e=>{
+                            console.error(e);
+                        })
+
+
+
+                })
+
+                replyModify.addEventListener('click',()=>{
+                    var rno = document.querySelector('input[name="rno"]').value;
+                    var text = document.querySelector('input[name="replyText"]').value;
+                    var replier = document.querySelector('input[name="replier"]').value;
+                    var reply = {
+                        rno,
+                        bno,
+                        text,
+                        replier
+                    }
+
+                    console.log(reply);
+
+                    // POST
+                    fetch(`/replies/${rno}`,{
+                        method:"PUT",
+                        headers:{
+                            'Content-Type':'application/json; charset=utf-8'
+                        },
+                        body: JSON.stringify(reply)
+                    })
+                        .then((res)=>res.text())
+                        .then((msg)=>{
+                            if(msg=='success'){
+                                alert("수정 되었습니다.");
+                                modal.hide();
+                                loadJSONData();
+                            }
+                        });
+
+                })
+
+            }
+
+        </script>
+
+    </th:block>
+</th:block>
