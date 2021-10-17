@@ -73,7 +73,7 @@ public class GuestbookServiceImpl implements GuestbookService{
     }
 
 
-
+    // querydsl 메서드
     private BooleanBuilder getSearch(PageRequestDTO requestDTO){
         String type = requestDTO.getType();
         String keyword = requestDTO.getKeyword();
